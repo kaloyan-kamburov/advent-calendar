@@ -1,31 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useParams } from "react-router-dom";
-import { useAuth } from "../../AuthContext";
 import { useEffect, useState } from "react";
-import { app } from "../../config"; // Assuming the correct path to your configuration file
-import { ref, onValue, getDatabase } from "firebase/database";
+import { database } from "../../config"; // Assuming the correct path to your configuration file
+import { ref, onValue } from "firebase/database";
+import { useParams } from "react-router-dom";
 
-const CalendarPage = () => {
-  const { name } = useParams();
-
-  const [data, setData] = useState<any>([]);
-  const [people, setPeople] = useState([]);
-
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState("");
+const PeoplePage = () => {
+  const [personDetails, setPersonDetails] = useState<any>({});
+  const params = useParams();
 
   useEffect(() => {
-    const database = getDatabase(app);
     const peopleRef = ref(database, "people");
     // console.log(peopleRef);
 
     onValue(peopleRef, (snapshot) => {
       const data = snapshot.val();
       console.log(data);
-      const loadedPeople = data
-        ? Object.keys(data).map((key) => ({ id: key, ...data[key] }))
-        : [];
-      setPeople(loadedPeople);
+
+      const peopleData: any = {};
+
+      const findByName = () => {
+        for (const key in data) {
+          if (data[key].name === params.name) {
+            return data[key];
+          }
+        }
+      };
+
+      const newPersonDetails = findByName();
+      console.log(newPersonDetails);
+
+      setPersonDetails(newPersonDetails);
     });
   }, []);
 
@@ -55,35 +59,17 @@ const CalendarPage = () => {
   //   fetchData();
   // }, []);
 
-  return createOpen ? (
-    <CalendarCreate closeFn={() => setCreateOpen(false)} />
-  ) : editOpen ? (
-    <CalendarEdit id={editOpen} closeFn={() => setEditOpen("")} />
-  ) : (
+  return (
     <div>
       <h1>Data from database:</h1>
-      <button onClick={() => setCreateOpen(true)}>Create</button>
-      {JSON.stringify(data)}
-
-      {people.map((person: any) => (
+      {/* {people.map((person: any) => (
         <div key={person.id}>
           <h2>{person.name}</h2>
-          <button
-            onClick={() => {
-              setEditOpen(person.id);
-            }}
-          >
-            Edit
-          </button>
         </div>
-      ))}
-      {/* <ul>
-        {data.map((item, index) => (
-          <li key={index}>{item}</li>
-        ))}
-      </ul> */}
+      ))} */}
+      <pre>{JSON.stringify(personDetails)}</pre>
     </div>
   );
 };
 
-export default CalendarPage;
+export default PeoplePage;
