@@ -5,6 +5,10 @@ interface Props {
   closeFn: () => void;
 }
 
+const slugify = (text: string) => {
+  return text.toString().toLowerCase().replace(/\s+/g, "-"); // Replace spaces with -
+};
+
 const CalendarCreate: FC<Props> = ({ closeFn }) => {
   const [formValues, setFormValues] = useState<{ [key: string]: string }>({});
   const onSubmit = async (e: FormEvent) => {
@@ -14,12 +18,21 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
       const peopleRef = ref(database, "people");
 
       const payload: {
-        [key: string]: string;
+        [key: string]:
+          | string
+          | {
+              text: string;
+              open: boolean;
+            };
       } = {
         name: formValues.name,
+        slug: slugify(formValues.name),
       };
-      Array.from(Array(24).keys()).forEach((el) => {
-        payload[el] = formValues[el];
+      [...Array.from(Array(25).keys())].slice(1).forEach((el) => {
+        payload[el] = {
+          text: formValues[el],
+          open: false,
+        };
       });
 
       // Add a new entry to "people"
@@ -37,7 +50,7 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
     for (const key in formValues) {
       if (
         !formValues[key].trim() ||
-        Array.from(Array(24).keys()).some((el) => !formValues[el])
+        [...Array.from(Array(25).keys())].slice(1).some((el) => !formValues[el])
       ) {
         return false;
       }
@@ -65,7 +78,7 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
             }}
           />
         </div>
-        {Array.from(Array(24).keys()).map((el) => (
+        {[...Array.from(Array(25).keys())].slice(1).map((el) => (
           <div key={el}>
             <label htmlFor={`${el}`}>{el}</label>
             <input

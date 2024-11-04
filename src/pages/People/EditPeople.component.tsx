@@ -6,6 +6,9 @@ interface Props {
   closeFn: () => void;
 }
 
+const slugify = (text: string) => {
+  return text.toString().toLowerCase().replace(/\s+/g, "-"); // Replace spaces with -
+};
 const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
   const [formValues, setFormValues] = useState<any>({});
   const onSubmit = async (e: FormEvent) => {
@@ -18,8 +21,9 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
         [key: string]: string;
       } = {
         name: formValues.name,
+        slug: slugify(formValues.name),
       };
-      Array.from(Array(24).keys()).forEach((el) => {
+      [...Array.from(Array(25).keys())].slice(1).forEach((el) => {
         payload[el] = formValues[el];
       });
 
@@ -37,8 +41,8 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
   const checkValidForm = () => {
     for (const key in formValues) {
       if (
-        !formValues[key].trim() ||
-        Array.from(Array(24).keys()).some((el) => !formValues[el])
+        [...Array.from(Array(25).keys())].slice(1).some((el) => !formValues[el]?.text) ||
+        !formValues.name
       ) {
         return false;
       }
@@ -86,24 +90,27 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
             }}
           />
         </div>
-        {Array.from(Array(24).keys()).map((el) => (
+        {[...Array.from(Array(25).keys())].slice(1).map((el) => (
           <div key={el}>
             <label htmlFor={`${el}`}>{el}</label>
             <input
               type="text"
               name={`${el}`}
               id={`${el}`}
-              value={formValues[el]}
+              value={formValues[el]?.text}
               onChange={(e) => {
                 setFormValues({
                   ...formValues,
-                  [e.target.name]: e.target.value,
+                  [e.target.name]: {
+                    ...formValues[e.target.name],
+                    text: e.target.value,
+                  },
                 });
               }}
             />
           </div>
         ))}
-        {/* <pre>{JSON.stringify(formValues)}</pre> */}
+        <pre>{JSON.stringify(formValues, null, 4)}</pre>
         <button type="submit" disabled={!checkValidForm()}>
           Submit
         </button>

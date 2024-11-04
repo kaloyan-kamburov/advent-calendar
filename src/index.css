@@ -5,7 +5,8 @@
 
 /**
  * 1. Correct the line height in all browsers.
- * 2. Prevent adjustments of font size after orientation changes in iOS.
+ * 2. 
+ revent adjustments of font size after orientation changes in iOS.
  */
 
 html {
@@ -353,4 +354,258 @@ template {
 html,
 body {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  background-color: #062b00;
+  color: #fff;
+  height: 100%;
+}
+
+#root {
+  display: flex;
+  height: 100%;
+  width: 100vw;
+}
+.calender-outer-wrapper {
+  width: 100vw;
+}
+.calendar-wrapper {
+  width: 100%;
+  min-height: calc(100vh - 40px);
+  padding: 0 15px 15px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.day {
+  float: left;
+  width: 25%;
+  min-height: 100px;
+  box-shadow: 0 0 0 1px #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 10px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: not-allowed;
+}
+
+.day:not(.disabled):hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.day.disabled .open-msg {
+  opacity: 0.35;
+}
+
+.date-wrapper {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+html {
+  height: 100%;
+}
+
+@media (max-width: 640px) {
+  .date-wrapper {
+    font-size: 12px;
+  }
+}
+
+svg {
+  fill: #fff;
+  width: 30px;
+  max-height: 30px;
+}
+
+.calendar-outer-wrapper {
+  display: flex;
+  position: relative;
+}
+.bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  opacity: 0.35;
+}
+
+.snow-wrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.calendar-title {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+body,
+html {
+  overflow-x: hidden;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+  --R: 30px;
+  --g1: #b80101 96%, #0000;
+  --g2: #eeeeee 96%, #0000;
+  width: calc(2 * var(--R));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  -webkit-mask: linear-gradient(#000 0 0);
+  animation: l30 2s infinite linear;
+}
+.loader::before,
+.loader::after {
+  content: "";
+  grid-area: 1/1;
+  width: 50%;
+  background: radial-gradient(farthest-side, var(--g1))
+      calc(var(--R) + 0.866 * var(--R) - var(--R))
+      calc(var(--R) - 0.5 * var(--R) - var(--R)),
+    radial-gradient(farthest-side, var(--g1)) calc(var(--R) + 0.866 * var(--R) - var(--R))
+      calc(var(--R) - 0.5 * var(--R) - var(--R)),
+    radial-gradient(farthest-side, var(--g2)) calc(var(--R) + 0.5 * var(--R) - var(--R))
+      calc(var(--R) - 0.866 * var(--R) - var(--R)),
+    radial-gradient(farthest-side, var(--g1)) 0 calc(-1 * var(--R)),
+    radial-gradient(farthest-side, var(--g2)) calc(var(--R) - 0.5 * var(--R) - var(--R))
+      calc(var(--R) - 0.866 * var(--R) - var(--R)),
+    radial-gradient(farthest-side, var(--g1)) calc(var(--R) - 0.866 * var(--R) - var(--R))
+      calc(var(--R) - 0.5 * var(--R) - var(--R)),
+    radial-gradient(farthest-side, var(--g2)) calc(-1 * var(--R)) 0,
+    radial-gradient(farthest-side, var(--g1)) calc(var(--R) - 0.866 * var(--R) - var(--R))
+      calc(var(--R) + 0.5 * var(--R) - var(--R));
+  background-size: calc(2 * var(--R)) calc(2 * var(--R));
+  background-repeat: no-repeat;
+}
+.loader::after {
+  transform: rotate(180deg);
+  transform-origin: right;
+}
+
+@keyframes l30 {
+  100% {
+    transform: rotate(-1turn);
+  }
+}
+
+.loader-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-text-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fffde7;
+  z-index: 10;
+  animation: modalShowUp 0.7s;
+  color: rgb(45, 26, 0);
+  display: flex;
+  width: 100%;
+  padding-top: 40px;
+}
+
+.modal-text-wrapper svg {
+  fill: rgb(45, 26, 0) !important;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.modal-content .text-wrapper {
+  padding: 20px 6vw 0;
+}
+
+.modal-content h5 {
+  text-align: center;
+  font-size: 6vw;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-style: italic;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.modal-content .text-wrapper {
+  font-size: 8.5vw;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.text > div {
+  margin-top: 20px;
+  white-space: normal !important;
+  font-style: italic;
+}
+
+.modal-content img {
+  max-height: 300px;
+  margin: auto;
+}
+
+.img-wrapper {
+  flex: 1;
+  height: 50px;
+}
+
+/* animation scale */
+@keyframes modalShowUp {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 640px) {
+  .modal-content h5 {
+    font-size: 3vw;
+  }
+  .modal-content .text-wrapper {
+    font-size: 5vw;
+  }
 }
