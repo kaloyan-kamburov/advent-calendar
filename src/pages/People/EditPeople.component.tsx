@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, FormEvent, useEffect, useState } from "react";
 import { database, ref, update } from "../../config";
-import { getDatabase, onValue } from "firebase/database";
+import { /*getDatabase,*/ onValue } from "firebase/database";
 interface Props {
   id: string;
   closeFn: () => void;
@@ -40,6 +42,7 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
 
   const checkValidForm = () => {
     for (const key in formValues) {
+      console.log(key);
       if (
         [...Array.from(Array(25).keys())].slice(1).some((el) => !formValues[el]?.text) ||
         !formValues.name

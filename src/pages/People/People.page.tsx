@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { app, remove, database } from "../../config"; // Assuming the correct path to your configuration file
-import { ref, onValue, getDatabase } from "firebase/database";
+import { remove, database } from "../../config"; // Assuming the correct path to your configuration file
+import { ref, onValue } from "firebase/database";
 import CalendarCreate from "./CreatePeople.component";
 import CalendarEdit from "./EditPeople.component";
 
@@ -25,7 +26,7 @@ const PeoplePage = () => {
     });
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: any) => {
     const personRef = ref(database, `people/${id}`);
     try {
       await remove(personRef);

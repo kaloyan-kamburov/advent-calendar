@@ -48,7 +48,7 @@
 // export default App;
 
 // App.js
-import React from "react";
+// import React from "react";
 import { AuthProvider } from "./AuthContext";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home.page";

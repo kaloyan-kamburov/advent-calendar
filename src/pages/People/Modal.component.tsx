@@ -1,4 +1,5 @@
-import { FC, useEffect, useRef, useState, ComponentProps } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { FC, useEffect, useState } from "react";
 import { Fade } from "react-awesome-reveal";
 
 interface Props {
