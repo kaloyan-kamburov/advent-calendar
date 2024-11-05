@@ -1,15 +1,13 @@
 import { useAuth } from "../../AuthContext";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 const Login = () => {
   const { login, user, loading } = useAuth();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || "/";
 
   if (loading) return null; // or a loading spinner if you prefer
 
   return user ? (
-    <Navigate to={from} />
+    <Navigate to="/people" />
   ) : (
     <div>
       <h1>Login</h1>
