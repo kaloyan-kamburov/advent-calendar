@@ -5,6 +5,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   onAuthStateChanged,
 } from "firebase/auth";
 import { getDatabase, ref, push, update, remove } from "firebase/database";
@@ -31,6 +32,7 @@ export {
   auth,
   provider,
   signInWithPopup,
+  signInWithRedirect,
   onAuthStateChanged,
   database,
   ref,
