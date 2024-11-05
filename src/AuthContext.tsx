@@ -36,7 +36,9 @@ export const AuthProvider: FC<any> = ({ children }) => {
   const [loading, setLoading] = useState(true); // New loading state
 
   const login = () =>
-    mobileCheck() ? signInWithRedirect(auth, provider) : signInWithPopup(auth, provider);
+    mobileCheck()
+      ? signInWithRedirect(auth, provider).catch((error) => alert(error.message))
+      : signInWithPopup(auth, provider).catch((error) => alert(error.message));
   const logout = () => auth.signOut();
 
   useEffect(() => {

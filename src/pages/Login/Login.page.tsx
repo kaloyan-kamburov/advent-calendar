@@ -7,7 +7,7 @@ const Login = () => {
   if (loading) return null; // or a loading spinner if you prefer
 
   return user ? (
-    <Navigate to="/people" />
+    <Navigate to={"/people"} />
   ) : (
     <div>
       <h1>Login</h1>
