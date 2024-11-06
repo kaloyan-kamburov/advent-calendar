@@ -106,7 +106,7 @@ const PeoplePage = () => {
         <div className="person" key={person.id}>
           <span>{person.name}</span>
           <div className="btns-wrapper">
-            <BtnCopy text={window.location.origin + `/${person.name.to}`.toLowerCase()} />
+            <BtnCopy text={window.location.origin + `/${person.name}`.toLowerCase()} />
 
             <button
               onClick={() => {
