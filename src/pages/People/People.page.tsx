@@ -6,11 +6,34 @@ import { ref, onValue } from "firebase/database";
 import CalendarCreate from "./CreatePeople.component";
 import CalendarEdit from "./EditPeople.component";
 
+const BtnCopy = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      className="btn-copy"
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      }}
+    >
+      {copied ? "Copied!" : "Copy Link"}
+    </button>
+  );
+};
+
 const PeoplePage = () => {
   const [people, setPeople] = useState<any[]>([]);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState("");
+  const [textCopied, setTextCopied] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string | number;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     const peopleRef = ref(database, "people");
@@ -18,7 +41,6 @@ const PeoplePage = () => {
 
     onValue(peopleRef, (snapshot) => {
       const data = snapshot.val();
-      console.log(data);
       const loadedPeople = data
         ? Object.keys(data).map((key) => ({ id: key, ...data[key] }))
         : [];
@@ -26,8 +48,8 @@ const PeoplePage = () => {
     });
   }, []);
 
-  const handleDelete = async (id: any) => {
-    const personRef = ref(database, `people/${id}`);
+  const handleDelete = async () => {
+    const personRef = ref(database, `people/${deleteConfirm?.id}`);
     try {
       await remove(personRef);
       // alert("Person deleted successfully!");
@@ -68,29 +90,46 @@ const PeoplePage = () => {
   ) : editOpen ? (
     <CalendarEdit id={editOpen} closeFn={() => setEditOpen("")} />
   ) : (
-    <div>
-      <h1>Data from database:</h1>
-      <button onClick={() => setCreateOpen(true)}>Create</button>
+    <div className="people-list">
+      <button className="create-btn" onClick={() => setCreateOpen(true)}>
+        Create
+      </button>
       {people.map((person: any) => (
-        <div key={person.id}>
-          <h2>{person.name}</h2>
-          <button
-            onClick={() => {
-              setEditOpen(person.id);
-            }}
-          >
-            Edit
-          </button>
+        <div className="person" key={person.id}>
+          <span>{person.name}</span>
+          <div className="btns-wrapper">
+            <BtnCopy text={window.location.origin + `/${person.name}`} />
 
-          <button
-            onClick={() => {
-              handleDelete(person.id);
-            }}
-          >
-            Delete
-          </button>
+            <button
+              onClick={() => {
+                setEditOpen(person.id);
+              }}
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={() => {
+                setDeleteConfirm(person);
+                // handleDelete(person.id);
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       ))}
+      {deleteConfirm && (
+        <div className="delete-confirm-mask">
+          <div className="delete-confirm-content">
+            <p>Are you sure you want to delete {deleteConfirm.name}?</p>
+            <div className="btns-wrapper">
+              <button onClick={handleDelete}>Yes</button>
+              <button onClick={() => setDeleteConfirm(null)}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

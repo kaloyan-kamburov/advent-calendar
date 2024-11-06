@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { getDatabase, ref, push, update, remove } from "firebase/database";
 
@@ -34,6 +35,7 @@ export {
   provider,
   signInWithPopup,
   signInWithRedirect,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
   database,
   ref,

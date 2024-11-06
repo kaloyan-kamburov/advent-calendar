@@ -3,13 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // AuthContext.js
 import { createContext, useContext, useEffect, useState, FC } from "react";
-import {
-  auth,
-  provider,
-  signInWithPopup,
-  signInWithRedirect,
-  onAuthStateChanged,
-} from "./config";
+import { auth, provider, onAuthStateChanged, signInWithEmailAndPassword } from "./config";
 
 const AuthContext = createContext<any>(undefined);
 
@@ -35,10 +29,9 @@ export const AuthProvider: FC<any> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // New loading state
 
-  const login = () =>
-    mobileCheck()
-      ? signInWithRedirect(auth, provider).catch((error) => alert(error.message))
-      : signInWithPopup(auth, provider).catch((error) => alert(error.message));
+  const login = (user: string = "", email: string = "") =>
+    signInWithEmailAndPassword(auth, user, email).catch((error) => alert(error.message));
+
   const logout = () => auth.signOut();
 
   useEffect(() => {
