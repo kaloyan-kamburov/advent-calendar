@@ -5,6 +5,7 @@ import { remove, database } from "../../config"; // Assuming the correct path to
 import { ref, onValue } from "firebase/database";
 import CalendarCreate from "./CreatePeople.component";
 import CalendarEdit from "./EditPeople.component";
+import { useAuth } from "../../AuthContext";
 
 const BtnCopy = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
@@ -29,11 +30,11 @@ const PeoplePage = () => {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState("");
-  const [textCopied, setTextCopied] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string | number;
     name: string;
   } | null>(null);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const peopleRef = ref(database, "people");
@@ -86,14 +87,21 @@ const PeoplePage = () => {
   // }, []);
 
   return createOpen ? (
-    <CalendarCreate closeFn={() => setCreateOpen(false)} />
+    <div className="d-flex justify-middle w-100">
+      <CalendarCreate closeFn={() => setCreateOpen(false)} />
+    </div>
   ) : editOpen ? (
     <CalendarEdit id={editOpen} closeFn={() => setEditOpen("")} />
   ) : (
     <div className="people-list">
-      <button className="create-btn" onClick={() => setCreateOpen(true)}>
-        Create
-      </button>
+      <div className="d-flex justify-between">
+        <button className="create-btn" onClick={() => setCreateOpen(true)}>
+          Create
+        </button>
+        <button className="ml-auto" onClick={logout}>
+          Logout
+        </button>
+      </div>
       {people.map((person: any) => (
         <div className="person" key={person.id}>
           <span>{person.name}</span>

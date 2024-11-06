@@ -41,14 +41,8 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
   };
 
   const checkValidForm = () => {
-    for (const key in formValues) {
-      console.log(key);
-      if (
-        [...Array.from(Array(25).keys())].slice(1).some((el) => !formValues[el]?.text) ||
-        !formValues.name
-      ) {
-        return false;
-      }
+    if (!formValues.name) {
+      return false;
     }
     return true;
   };
@@ -74,11 +68,10 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
     fetchData();
   }, []);
   return (
-    <div>
-      edit
-      <div onClick={closeFn}>X</div>
+    <div className="p-15 w-100">
+      <h1>Edit Person</h1>
       <form onSubmit={onSubmit}>
-        <div>
+        <div className="input-wrapper">
           <label htmlFor="name">name</label>
           <input
             type="text"
@@ -94,12 +87,12 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
           />
         </div>
         {[...Array.from(Array(25).keys())].slice(1).map((el) => (
-          <div key={el}>
+          <div className="input-wrapper" key={el}>
             <label htmlFor={`${el}`}>{el}</label>
-            <input
-              type="text"
+            <textarea
               name={`${el}`}
               id={`${el}`}
+              rows={3}
               value={formValues[el]?.text}
               onChange={(e) => {
                 setFormValues({
@@ -113,10 +106,10 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
             />
           </div>
         ))}
-        <pre>{JSON.stringify(formValues, null, 4)}</pre>
         <button type="submit" disabled={!checkValidForm()}>
           Submit
         </button>
+        <button onClick={closeFn}>Cancel</button>
       </form>
     </div>
   );

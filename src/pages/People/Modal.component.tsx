@@ -26,7 +26,7 @@ const DynamicImage: FC<DynamicImageProps> = ({ imageName }) => {
 
   if (!imageSrc) return null; // Optionally, add a loader here
 
-  return <img src={imageSrc} alt={imageName} />;
+  return <img className="modal-image" src={imageSrc} alt={imageName} />;
 };
 
 const ModalText: FC<Props> = ({ text, day, closeFn }) => {

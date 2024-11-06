@@ -47,24 +47,17 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
   };
 
   const checkValidForm = () => {
-    for (const key in formValues) {
-      if (
-        !formValues[key].trim() ||
-        [...Array.from(Array(25).keys())].slice(1).some((el) => !formValues[el])
-      ) {
-        return false;
-      }
+    if (!formValues.name) {
+      return false;
     }
     return true;
   };
 
   return (
-    <div>
-      <div className="close" onClick={closeFn}>
-        X
-      </div>
+    <div className="p-15 w-100">
+      <h1>Create Person</h1>
       <form onSubmit={onSubmit}>
-        <div>
+        <div className="input-wrapper">
           <label htmlFor="name">name</label>
           <input
             type="text"
@@ -79,25 +72,24 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
           />
         </div>
         {[...Array.from(Array(25).keys())].slice(1).map((el) => (
-          <div key={el}>
+          <div className="input-wrapper" key={el}>
             <label htmlFor={`${el}`}>{el}</label>
-            <input
-              type="text"
+            <textarea
               name={`${el}`}
               id={`${el}`}
               onChange={(e) => {
                 setFormValues({
                   ...formValues,
-                  [e.target.name]: e.target.value,
+                  [e.target.name]: e.target.value || "",
                 });
               }}
             />
           </div>
         ))}
-        <pre>{JSON.stringify(formValues)}</pre>
-        <button type="submit" disabled={!checkValidForm()}>
+        <button type="submit" className="submit" disabled={!checkValidForm()}>
           Submit
         </button>
+        <button onClick={closeFn}>Cancel</button>
       </form>
     </div>
   );

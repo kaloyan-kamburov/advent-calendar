@@ -24,29 +24,33 @@ const Login = () => {
   return user ? (
     <Navigate to={"/people"} />
   ) : (
-    <div>
+    <div className="login-wrapper">
       <h1>Login</h1>
       <form onSubmit={handleLogin}>
-        <div>
+        <div className="input-wrapper">
           <label>Email:</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="email"
           />
         </div>
-        <div>
+        <div className="input-wrapper">
           <label>Password:</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            placeholder="password"
           />
         </div>
         {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
-        <button type="submit">Sign In</button>
+        <button className="submit" type="submit">
+          Sign In
+        </button>
       </form>
     </div>
   );

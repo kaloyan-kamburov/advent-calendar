@@ -23,6 +23,7 @@ html {
 
 body {
   margin: 0;
+  /* font-size: 16px; */
 }
 
 /**
@@ -353,7 +354,7 @@ template {
 
 html,
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Raleway", Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -364,8 +365,8 @@ body {
 
 #root {
   display: flex;
-  height: 100%;
   width: 100vw;
+  min-height: 100%;
 }
 .calender-outer-wrapper {
   width: 100vw;
@@ -610,10 +611,6 @@ html {
   }
 }
 
-.create-btn {
-  margin-bottom: 15px;
-}
-
 .people-list {
   padding: 15px;
   width: 100%;
@@ -626,6 +623,7 @@ html {
   margin-top: 15px;
   border-bottom: 1px solid #fff;
   flex-direction: column;
+  padding-bottom: 15px;
 }
 
 .person:last-of-type {
@@ -685,4 +683,84 @@ button {
 .delete-confirm-content .btns-wrapper {
   display: flex;
   justify-content: center;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+input,
+textarea {
+  border: 1px solid #fff;
+  background-color: transparent;
+  font-size: 14px;
+  padding: 10px;
+  color: #fff;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.login-wrapper {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+h1 {
+  margin: 0 0 15px;
+}
+
+.submit {
+  margin-top: 15px;
+}
+form {
+  width: 100%;
+}
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+input:disabled {
+  opacity: 0;
+}
+
+.p-15 {
+  padding: 15px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+a {
+  color: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.modal-image {
+  animation: fadeIn 0.7s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
