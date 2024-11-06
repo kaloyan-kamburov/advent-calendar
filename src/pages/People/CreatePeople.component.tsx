@@ -30,7 +30,7 @@ const CalendarCreate: FC<Props> = ({ closeFn }) => {
       };
       [...Array.from(Array(25).keys())].slice(1).forEach((el) => {
         payload[el] = {
-          text: formValues[el],
+          text: formValues[el] || "",
           open: false,
         };
       });
