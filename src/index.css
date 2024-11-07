@@ -464,6 +464,10 @@ svg {
   z-index: 2;
 }
 
+.calendar-title b {
+  text-transform: capitalize;
+}
+
 body,
 html {
   overflow-x: hidden;

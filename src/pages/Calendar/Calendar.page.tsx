@@ -55,7 +55,11 @@ const CalendarPage = () => {
       };
 
       const newPersonDetails = findByName();
+
       setLoading(false);
+      if (!newPersonDetails) {
+        alert("Няма такъв човек");
+      }
       setPersonDetails(newPersonDetails);
     });
   }, []);
@@ -107,7 +111,9 @@ const CalendarPage = () => {
           </div>
         ) : (
           <>
-            <div className="calendar-title">Календара на {personDetails?.name}</div>
+            <div className="calendar-title">
+              Календарът на&nbsp;<b>{personDetails?.name}</b>
+            </div>
             <div className="calendar-wrapper">
               {[...Array.from(Array(25).keys())].slice(1).map((el) => (
                 <div

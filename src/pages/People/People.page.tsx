@@ -38,7 +38,6 @@ const PeoplePage = () => {
 
   useEffect(() => {
     const peopleRef = ref(database, "people");
-    // console.log(peopleRef);
 
     onValue(peopleRef, (snapshot) => {
       const data = snapshot.val();
@@ -53,7 +52,7 @@ const PeoplePage = () => {
     const personRef = ref(database, `people/${deleteConfirm?.id}`);
     try {
       await remove(personRef);
-      // alert("Person deleted successfully!");
+      setDeleteConfirm(null);
     } catch (error) {
       console.error("Error deleting person: ", error);
       alert("Failed to delete person.");
@@ -119,7 +118,6 @@ const PeoplePage = () => {
             <button
               onClick={() => {
                 setDeleteConfirm(person);
-                // handleDelete(person.id);
               }}
             >
               Delete
