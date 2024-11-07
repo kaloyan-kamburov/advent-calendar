@@ -109,7 +109,9 @@ const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
         <button type="submit" disabled={!checkValidForm()}>
           Submit
         </button>
-        <button onClick={closeFn}>Cancel</button>
+        <button type="button" onClick={closeFn}>
+          Cancel
+        </button>
       </form>
     </div>
   );
