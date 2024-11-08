@@ -674,6 +674,7 @@ button {
   padding: 15px;
   display: flex;
   flex-direction: column;
+  background-color: #000;
 }
 
 .delete-confirm-content button {
