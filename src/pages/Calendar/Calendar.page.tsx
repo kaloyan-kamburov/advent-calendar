@@ -5,7 +5,6 @@ import { ref, onValue, update } from "firebase/database";
 import { useParams } from "react-router-dom";
 import ModalText from "../People/Modal.component";
 import Snowfall from "react-snowfall";
-import BG from "../../img/bg.png";
 
 const availableDate = (day: number) => {
   return new Date().getDate() >= parseFloat(day.toString());
@@ -20,6 +19,16 @@ const CalendarPage = () => {
     day: number;
     text: string;
   } | null>(null);
+  const [bgIndex, setBgIndex] = useState<number>(0);
+  const bgImages = [
+    "/bg1.jpg",
+    "/bg2.jpg",
+    "/bg3.jpg",
+    "/bg4.jpg",
+    "/bg5.jpg",
+    "/bg6.jpg",
+    "/bg7.jpg",
+  ];
 
   const openDay = async (day: number) => {
     // alert(personDetails[day].text);
@@ -62,6 +71,13 @@ const CalendarPage = () => {
       }
       setPersonDetails(newPersonDetails);
     });
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % bgImages.length);
+    }, 5000);
+    return () => clearInterval(intervalId);
   }, []);
 
   // useEffect(() => {
@@ -137,7 +153,11 @@ const CalendarPage = () => {
                         <path d="M21.99 8c0-.72-.37-1.35-.94-1.7L12 1 2.95 6.3C2.38 6.65 2 7.28 2 8v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2zM12 13 3.74 7.84 12 3l8.26 4.84z"></path>
                       </svg>
                     ) : (
-                      <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+                      <svg
+                        focusable="false"
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2m0 4-8 5-8-5V6l8 5 8-5z"></path>
                       </svg>
                     )}
@@ -149,12 +169,18 @@ const CalendarPage = () => {
           </>
         )}
 
-        <div
-          className="bg"
-          style={{
-            backgroundImage: `url(${BG})`,
-          }}
-        ></div>
+        <div className="bg">
+          {bgImages.map((src, i) => (
+            <div
+              key={src}
+              className="bg-slide"
+              style={{
+                backgroundImage: `url(${src})`,
+                opacity: bgIndex === i ? 1 : 0,
+              }}
+            />
+          ))}
+        </div>
         <div className="snow-wrapper">
           <Snowfall snowflakeCount={100} />
         </div>
