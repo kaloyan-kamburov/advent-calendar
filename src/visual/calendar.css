@@ -8,6 +8,16 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Wolgast Two";
+  src:
+    url("/fonts/WolgastTwo.woff2") format("woff2"),
+    url("/fonts/WolgastTwo.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body.advent-open {
   overflow: hidden;
   background: #000;
@@ -140,13 +150,6 @@ body.advent-open {
   text-align: center;
 }
 
-.advent-screen .loader-title {
-  margin: 0 0 28px;
-  font-family: "Merry Christmas Star", cursive;
-  font-size: 42px;
-  line-height: 1;
-}
-
 .advent-screen .loader-status {
   margin: 16px 0 0;
   font-family: system-ui, sans-serif;
@@ -162,7 +165,7 @@ body.advent-open {
   height: 3px;
   margin: 0 auto;
   overflow: hidden;
-  background: #242424;
+  background: rgba(230, 23, 34, 0.35);
 }
 
 .advent-screen .loader-bar span {

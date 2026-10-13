@@ -224,7 +224,7 @@ export function createNote(scene: Scene, camera: PerspectiveCamera, options: Not
     const laid = layoutLines(context, message, maxW, TEXT_BOTTOM - TEXT_TOP);
     laidLines = laid.lines;
     context.fillStyle = "#2b221b";
-    context.font = `${laid.size}px "Merry Christmas Star", cursive`;
+    context.font = `${laid.size}px "Wolgast Two", cursive`;
     context.textAlign = "left";
     context.textBaseline = "middle";
     const block = laid.lines.length * laid.size * 1.2;
@@ -335,7 +335,7 @@ function layoutLines(
   let size = 92;
   let lines = [""];
   while (size > 28) {
-    ctx.font = `${size}px "Merry Christmas Star", cursive`;
+    ctx.font = `${size}px "Wolgast Two", cursive`;
     lines = wrapMessage(ctx, text, maxWidth);
     const tooWide = lines.some((line) => ctx.measureText(line).width > maxWidth + 1);
     const tooTall = lines.length * size * 1.2 > maxHeight;

@@ -111,7 +111,7 @@ const CalendarPage = () => {
     void (async () => {
       try {
         const slidesReady = photos.untilReady;
-        await loadStarFont();
+        await loadCalendarFonts();
         if (cancelled) return;
         const app = createCalendar({
           canvas,
@@ -167,7 +167,6 @@ const CalendarPage = () => {
     <div className="advent-screen">
       <div id="loader" className={booted ? "is-done" : undefined} role="status" aria-label="Loading" aria-hidden={booted}>
         <div className="loader-card">
-          <p className="loader-title">Advent Calendar</p>
           <div className="loader-bar" aria-hidden="true">
             <span />
           </div>
@@ -238,10 +237,16 @@ const CalendarPage = () => {
   );
 };
 
-async function loadStarFont(): Promise<void> {
-  const face = new FontFace("Merry Christmas Star", "url(/fonts/MerryChristmasStar.woff2)");
-  document.fonts.add(await face.load());
-  await document.fonts.load('96px "Merry Christmas Star"');
+async function loadCalendarFonts(): Promise<void> {
+  const star = new FontFace("Merry Christmas Star", "url(/fonts/MerryChristmasStar.woff2)");
+  const notes = new FontFace("Wolgast Two", "url(/fonts/WolgastTwo.woff2)");
+  const [starFace, notesFace] = await Promise.all([star.load(), notes.load()]);
+  document.fonts.add(starFace);
+  document.fonts.add(notesFace);
+  await Promise.all([
+    document.fonts.load('96px "Merry Christmas Star"'),
+    document.fonts.load('96px "Wolgast Two"'),
+  ]);
 }
 
 export default CalendarPage;
