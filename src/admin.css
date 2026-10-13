@@ -160,7 +160,7 @@
 
 .search {
   width: min(320px, 100%);
-  margin: 0 0 16px;
+  margin: 0 0 28px;
   padding: 12px 14px;
   border: 1px solid #e4d9cc;
   border-radius: 12px;
@@ -283,6 +283,10 @@
   color: #241910;
   font-size: 16px;
   font-weight: 500;
+}
+
+.admin-shell .search {
+  margin-bottom: 28px;
 }
 
 .admin-shell textarea {
