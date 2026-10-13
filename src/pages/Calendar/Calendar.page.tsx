@@ -1,199 +1,247 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
-import { database } from "../../config"; // Assuming the correct path to your configuration file
-import { ref, onValue, update } from "firebase/database";
-import { useParams } from "react-router-dom";
-import ModalText from "../People/Modal.component";
-import Snowfall from "react-snowfall";
-
-const availableDate = (day: number) => {
-  return new Date().getDate() >= parseFloat(day.toString());
-};
+import { useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { onValue, update } from "firebase/database";
+import { database, ref } from "../../config";
+import { readPerson, type Person } from "../../calendarData";
+import { createAudioPlayer } from "../../visual/player";
+import { createCalendar, type CalendarApp } from "../../visual/scene";
+import { createSlideshow } from "../../visual/slideshow";
+import { createSnow } from "../../visual/snow";
+import "../../visual/calendar.css";
 
 const CalendarPage = () => {
-  const [personDetails, setPersonDetails] = useState<any>({});
-  const [id, setId] = useState<string>("");
   const params = useParams();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [modalData, setModalData] = useState<{
-    day: number;
-    text: string;
-  } | null>(null);
-  const [bgIndex, setBgIndex] = useState<number>(0);
-  const bgImages = [
-    "/bg1.jpg",
-    "/bg2.jpg",
-    "/bg3.jpg",
-    "/bg4.jpg",
-    "/bg5.jpg",
-    "/bg6.jpg",
-    "/bg7.jpg",
-  ];
+  const [person, setPerson] = useState<Person | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
+  const [booted, setBooted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const personRef = useRef<Person | null>(null);
+  const openRef = useRef<(day: number) => void>(() => {});
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const slideshowRef = useRef<HTMLDivElement>(null);
+  const snowRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLDivElement>(null);
+  const youtubeRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const liveRef = useRef<HTMLParagraphElement>(null);
 
-  const openDay = async (day: number) => {
-    // alert(personDetails[day].text);
-    try {
-      const personRef = ref(database, `people/${id}`);
-      const payload = {
-        ...personDetails,
-      };
-      payload[day] = {
-        ...payload[day],
-        open: true,
-      };
-      await update(personRef, payload);
+  personRef.current = person;
 
-      setModalData({ day, text: personDetails[day].text });
-    } catch (e) {
-      console.log(e);
-    }
+  openRef.current = (day: number) => {
+    const current = personRef.current;
+    if (!current) return;
+    const entry = current.days[day - 1];
+    if (!entry || entry.open) return;
+    const days = current.days.slice();
+    days[day - 1] = { ...entry, open: true };
+    const next = { ...current, days };
+    personRef.current = next;
+    setPerson(next);
+    void update(ref(database, `people/${current.id}/${day}`), {
+      text: entry.text,
+      open: true,
+    }).catch((updateError) => {
+      console.error(updateError);
+    });
   };
 
   useEffect(() => {
-    const peopleRef = ref(database, "people");
-
-    onValue(peopleRef, (snapshot) => {
-      const data = snapshot.val();
-      const findByName = () => {
-        for (const key in data) {
-          if (data[key].slug === params.name) {
-            setId(key);
-            return data[key];
-          }
-        }
-      };
-
-      const newPersonDetails = findByName();
-
-      setLoading(false);
-      if (!newPersonDetails) {
-        alert("Няма такъв човек");
-      }
-      setPersonDetails(newPersonDetails);
-    });
+    document.body.classList.add("advent-open");
+    return () => document.body.classList.remove("advent-open");
   }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % bgImages.length);
-    }, 5000);
-    return () => clearInterval(intervalId);
-  }, []);
+    const peopleRef = ref(database, "people");
+    return onValue(peopleRef, (snapshot) => {
+      const data = snapshot.val() as Record<string, unknown> | null;
+      const match = data
+        ? Object.entries(data).find(([, value]) => {
+            if (!value || typeof value !== "object") return false;
+            return (value as { slug?: unknown }).slug === params.name;
+          })
+        : undefined;
+      if (!match) {
+        personRef.current = null;
+        setPerson(null);
+        setStatus("missing");
+        return;
+      }
+      const next = readPerson(match[0], match[1]);
+      if (!next) {
+        personRef.current = null;
+        setPerson(null);
+        setStatus("missing");
+        return;
+      }
+      setPerson((prev) => {
+        if (prev && prev.id === next.id) {
+          next.days = next.days.map((day, index) => ({
+            ...day,
+            open: day.open || prev.days[index]?.open === true,
+          }));
+        }
+        personRef.current = next;
+        return next;
+      });
+      setStatus("ready");
+    });
+  }, [params.name]);
 
-  // useEffect(() => {
-  //   // Initialize the Firebase database with the provided configuration
-  //   const database = getDatabase(app);
+  useEffect(() => {
+    if (!person?.id) return;
+    const canvas = canvasRef.current;
+    const slideshowRoot = slideshowRef.current;
+    const snowRoot = snowRef.current;
+    const audioRoot = audioRef.current;
+    const youtubeMount = youtubeRef.current;
+    const closeButton = closeRef.current;
+    const live = liveRef.current;
+    if (!canvas || !slideshowRoot || !snowRoot || !audioRoot || !youtubeMount || !closeButton || !live) {
+      return;
+    }
 
-  //   // Reference to the specific collection in the database
-  //   const collectionRef = ref(database, "people");
+    let cancelled = false;
+    let calendar: CalendarApp | undefined;
+    const photos = createSlideshow(slideshowRoot);
+    createSnow(snowRoot);
+    const audio = createAudioPlayer(audioRoot, youtubeMount);
+    const onClose = () => calendar?.closeNote();
+    closeButton.addEventListener("click", onClose);
 
-  //   // Function to fetch data from the database
-  //   const fetchData = () => {
-  //     // Listen for changes in the collection
-  //     onValue(collectionRef, (snapshot) => {
-  //       const dataItem = snapshot.val();
-  //       console.log(dataItem);
-  //       // Check if dataItem exists
-  //       if (dataItem) {
-  //         // Convert the object values into an array
-  //         const displayItem = Object.values(dataItem);
-  //         setData(displayItem);
-  //       }
-  //     });
-  //   };
+    void (async () => {
+      try {
+        const slidesReady = photos.untilReady;
+        await loadStarFont();
+        if (cancelled) return;
+        const app = createCalendar({
+          canvas,
+          getDay: (day) => personRef.current?.days[day - 1] ?? { text: "", open: false },
+          onOpen: (day) => openRef.current(day),
+          onLuck(text) {
+            live.textContent = text ?? "";
+          },
+          onReadyToClose(ready) {
+            closeButton.hidden = !ready;
+            if (ready) closeButton.focus();
+          },
+        });
+        calendar = app;
+        await Promise.all([app.whenReady, slidesReady]);
+        if (cancelled) {
+          app.dispose();
+          return;
+        }
+        setBooted(true);
+      } catch (loadError) {
+        console.error(loadError);
+        if (!cancelled) setError("The calendar could not be loaded.");
+      }
+    })();
 
-  //   // Fetch data when the component mounts
-  //   fetchData();
-  // }, []);
+    return () => {
+      cancelled = true;
+      closeButton.removeEventListener("click", onClose);
+      calendar?.dispose();
+      photos.stop();
+      audio.dispose();
+      snowRoot.replaceChildren();
+      setBooted(false);
+    };
+  }, [person?.id]);
 
-  // return (
-  //   <div>
-  //     <h1>Data from database:</h1>
-  //     {/* {people.map((person: any) => (
-  //       <div key={person.id}>
-  //         <h2>{person.name}</h2>
-  //       </div>
-  //     ))} */}
-  //     {/* <pre>{JSON.stringify(personDetails)}</pre> */}
-
-  //   </div>
-  // );
-  return (
-    <>
-      <div className="calender-outer-wrapper">
-        {loading ? (
-          <div className="loader-wrapper">
-            <div className="loader" />
+  if (status === "missing") {
+    return (
+      <div className="advent-screen">
+        <div className="advent-missing">
+          <div>
+            <h1>Advent Calendar</h1>
+            <p>This calendar could not be found.</p>
+            <Link to="/">Back home</Link>
           </div>
-        ) : (
-          <>
-            <div className="calendar-title">
-              Календарът на&nbsp;<b>{personDetails?.name}</b>
-            </div>
-            <div className="calendar-wrapper">
-              {[...Array.from(Array(25).keys())].slice(1).map((el) => (
-                <div
-                  className={`day ${availableDate(el) ? "" : "disabled"}`}
-                  key={el}
-                  onClick={() => {
-                    if (availableDate(el)) {
-                      openDay(el);
-                    }
-                  }}
-                >
-                  {/* {personDetails[el]} */}
-                  <div className="open-msg">
-                    {personDetails[el]?.open ? (
-                      <svg
-                        focusable="false"
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        data-testid="DraftsIcon"
-                      >
-                        <path d="M21.99 8c0-.72-.37-1.35-.94-1.7L12 1 2.95 6.3C2.38 6.65 2 7.28 2 8v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2zM12 13 3.74 7.84 12 3l8.26 4.84z"></path>
-                      </svg>
-                    ) : (
-                      <svg
-                        focusable="false"
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2m0 4-8 5-8-5V6l8 5 8-5z"></path>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="date-wrapper">{el}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        <div className="bg">
-          {bgImages.map((src, i) => (
-            <div
-              key={src}
-              className="bg-slide"
-              style={{
-                backgroundImage: `url(${src})`,
-                opacity: bgIndex === i ? 1 : 0,
-              }}
-            />
-          ))}
-        </div>
-        <div className="snow-wrapper">
-          <Snowfall snowflakeCount={100} />
         </div>
       </div>
-      {modalData && (
-        <ModalText
-          text={modalData.text}
-          day={modalData.day}
-          closeFn={() => setModalData(null)}
-        />
-      )}
-    </>
+    );
+  }
+
+  return (
+    <div className="advent-screen">
+      <div id="loader" className={booted ? "is-done" : undefined} role="status" aria-label="Loading" aria-hidden={booted}>
+        <div className="loader-card">
+          <p className="loader-title">Advent Calendar</p>
+          <div className="loader-bar" aria-hidden="true">
+            <span />
+          </div>
+          <p className="loader-status" hidden={error == null}>
+            {error}
+          </p>
+        </div>
+      </div>
+      <div id="slideshow" ref={slideshowRef} aria-hidden="true">
+        <img className="slide" alt="" />
+        <img className="slide" alt="" />
+      </div>
+      <div id="snow" ref={snowRef} aria-hidden="true" />
+      <header>
+        <h1>Advent Calendar</h1>
+        {person?.name ? <p className="calendar-who">{person.name}</p> : null}
+      </header>
+      <canvas id="scene" ref={canvasRef} aria-label="Advent Calendar presents" />
+      <p id="luck-live" className="sr-only" ref={liveRef} aria-live="polite" />
+      <button id="close-luck" ref={closeRef} type="button" hidden>
+        Close
+      </button>
+      <div id="audio-player" ref={audioRef}>
+        <p id="audio-title">
+          <span className="audio-title-track">
+            <span className="audio-title-text">Loading</span>
+            <span className="audio-title-text audio-title-clone" aria-hidden="true" hidden>
+              Loading
+            </span>
+          </span>
+        </p>
+        <div className="audio-controls">
+          <button type="button" data-audio="prev" aria-label="Previous song">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.2 3h1.6v10H3.2zm2.5 5 7.1 4.2V3.8z" />
+            </svg>
+          </button>
+          <button type="button" className="is-paused" data-audio="toggle" aria-label="Play">
+            <svg className="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M5 3.2v9.6l8-4.8z" />
+            </svg>
+            <svg className="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 3h2.6v10H4zm5.4 0H12v10H9.4z" />
+            </svg>
+          </button>
+          <button type="button" data-audio="next" aria-label="Next song">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.2 3.8v8.4L10.3 8zM11.2 3h1.6v10h-1.6z" />
+            </svg>
+          </button>
+          <label className="audio-volume">
+            <span className="sr-only">Volume</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              defaultValue="3"
+              data-audio="volume"
+              aria-label="Volume"
+              aria-valuetext="3%"
+            />
+          </label>
+        </div>
+      </div>
+      <div id="yt-audio" ref={youtubeRef} aria-hidden="true" />
+    </div>
   );
 };
+
+async function loadStarFont(): Promise<void> {
+  const face = new FontFace("Merry Christmas Star", "url(/fonts/MerryChristmasStar.woff2)");
+  document.fonts.add(await face.load());
+  await document.fonts.load('96px "Merry Christmas Star"');
+}
 
 export default CalendarPage;

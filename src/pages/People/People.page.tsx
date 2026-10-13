@@ -1,141 +1,178 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
-import { remove, database } from "../../config"; // Assuming the correct path to your configuration file
-import { ref, onValue } from "firebase/database";
+import { useEffect, useMemo, useState } from "react";
+import { onValue } from "firebase/database";
+import { database, ref, remove } from "../../config";
+import { useAuth } from "../../AuthContext";
+import { readPerson, type Person } from "../../calendarData";
 import CalendarCreate from "./CreatePeople.component";
 import CalendarEdit from "./EditPeople.component";
-import { useAuth } from "../../AuthContext";
-
-const BtnCopy = ({ text }: { text: string }) => {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      className="btn-copy"
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-      }}
-    >
-      {copied ? "Copied!" : "Copy Link"}
-    </button>
-  );
-};
 
 const PeoplePage = () => {
-  const [people, setPeople] = useState<any[]>([]);
-
+  const [people, setPeople] = useState<Person[]>([]);
+  const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState("");
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    id: string | number;
-    name: string;
-  } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Person | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [copiedId, setCopiedId] = useState("");
   const { logout } = useAuth();
 
   useEffect(() => {
-    const peopleRef = ref(database, "people");
-
-    onValue(peopleRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedPeople = data
-        ? Object.keys(data).map((key) => ({ id: key, ...data[key] }))
+    return onValue(ref(database, "people"), (snapshot) => {
+      const data = snapshot.val() as Record<string, unknown> | null;
+      const loaded = data
+        ? Object.entries(data)
+            .map(([id, value]) => readPerson(id, value))
+            .filter((person): person is Person => person != null)
+            .sort((a, b) => a.name.localeCompare(b.name))
         : [];
-      setPeople(loadedPeople);
+      setPeople(loaded);
     });
   }, []);
 
-  const handleDelete = async () => {
-    const personRef = ref(database, `people/${deleteConfirm?.id}`);
+  useEffect(() => {
+    if (!deleteTarget) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDeleteTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteTarget]);
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return people;
+    return people.filter((person) => person.name.toLowerCase().includes(needle));
+  }, [people, query]);
+
+  const copyLink = async (person: Person) => {
+    const url = `${window.location.origin}/${person.slug}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedId(person.id);
+    window.setTimeout(() => setCopiedId(""), 2000);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteError("");
     try {
-      await remove(personRef);
-      setDeleteConfirm(null);
+      await remove(ref(database, `people/${deleteTarget.id}`));
+      setDeleteTarget(null);
     } catch (error) {
-      console.error("Error deleting person: ", error);
-      alert("Failed to delete person.");
+      console.error(error);
+      setDeleteError("Could not delete this calendar.");
     }
   };
 
-  // useEffect(() => {
-  //   // Initialize the Firebase database with the provided configuration
-  //   const database = getDatabase(app);
+  if (createOpen) return <CalendarCreate closeFn={() => setCreateOpen(false)} />;
+  if (editOpen) return <CalendarEdit id={editOpen} closeFn={() => setEditOpen("")} />;
 
-  //   // Reference to the specific collection in the database
-  //   const collectionRef = ref(database, "people");
-
-  //   // Function to fetch data from the database
-  //   const fetchData = () => {
-  //     // Listen for changes in the collection
-  //     onValue(collectionRef, (snapshot) => {
-  //       const dataItem = snapshot.val();
-  //       console.log(dataItem);
-  //       // Check if dataItem exists
-  //       if (dataItem) {
-  //         // Convert the object values into an array
-  //         const displayItem = Object.values(dataItem);
-  //         setData(displayItem);
-  //       }
-  //     });
-  //   };
-
-  //   // Fetch data when the component mounts
-  //   fetchData();
-  // }, []);
-
-  return createOpen ? (
-    <div className="d-flex justify-middle w-100">
-      <CalendarCreate closeFn={() => setCreateOpen(false)} />
-    </div>
-  ) : editOpen ? (
-    <CalendarEdit id={editOpen} closeFn={() => setEditOpen("")} />
-  ) : (
-    <div className="people-list">
-      <div className="d-flex justify-between">
-        <button className="create-btn" onClick={() => setCreateOpen(true)}>
-          Create
-        </button>
-        <button className="ml-auto" onClick={logout}>
-          Logout
-        </button>
-      </div>
-      {people.map((person: any) => (
-        <div className="person" key={person.id}>
-          <span>{person.name}</span>
-          <div className="btns-wrapper">
-            <BtnCopy text={window.location.origin + `/${person.name}`.toLowerCase()} />
-
-            <button
-              onClick={() => {
-                setEditOpen(person.id);
-              }}
-            >
-              Edit
+  return (
+    <div className="admin-shell">
+      <div className="admin-wrap">
+        <div className="admin-bar">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true" />
+            Advent Calendar
+          </div>
+          <div className="admin-actions">
+            <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
+              New calendar
             </button>
-
-            <button
-              onClick={() => {
-                setDeleteConfirm(person);
-              }}
-            >
-              Delete
+            <button type="button" className="btn-ghost" onClick={logout}>
+              Log out
             </button>
           </div>
         </div>
-      ))}
-      {deleteConfirm && (
-        <div className="delete-confirm-mask">
-          <div className="delete-confirm-content">
-            <p>Are you sure you want to delete {deleteConfirm.name}?</p>
-            <div className="btns-wrapper">
-              <button onClick={handleDelete}>Yes</button>
-              <button onClick={() => setDeleteConfirm(null)}>No</button>
+
+        <div className="page-intro">
+          <div>
+            <h1>Calendars</h1>
+            <p className="muted">
+              {people.length === 0 ? "No calendars yet." : `${people.length} ${people.length === 1 ? "person" : "people"}`}
+            </p>
+          </div>
+        </div>
+
+        {people.length > 0 ? (
+          <input
+            className="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name"
+            aria-label="Search calendars"
+          />
+        ) : null}
+
+        {people.length === 0 ? (
+          <div className="empty-state">
+            <h2>Create the first calendar</h2>
+            <p className="muted">Add a person, write a note for each day, then share their link.</p>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="empty-state">
+            <h2>No matches</h2>
+            <p className="muted">Try a different name.</p>
+          </div>
+        ) : (
+          <div className="person-list">
+            {visible.map((person) => {
+              const opened = person.days.filter((day) => day.open).length;
+              const written = person.days.filter((day) => day.text.trim()).length;
+              return (
+                <article className="person-card" key={person.id}>
+                  <div className="avatar" aria-hidden="true">
+                    {person.name.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2>{person.name}</h2>
+                    <p className="person-meta">
+                      /{person.slug} · {written} messages · {opened} opened
+                    </p>
+                  </div>
+                  <div className="card-actions">
+                    <a className="btn" href={`/${person.slug}`} target="_blank" rel="noreferrer">
+                      Open
+                    </a>
+                    <button type="button" onClick={() => void copyLink(person)}>
+                      {copiedId === person.id ? "Copied" : "Copy link"}
+                    </button>
+                    <button type="button" onClick={() => setEditOpen(person.id)}>
+                      Edit
+                    </button>
+                    <button type="button" className="btn-danger" onClick={() => setDeleteTarget(person)}>
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {deleteTarget ? (
+        <div className="modal-backdrop" onClick={() => setDeleteTarget(null)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="delete-title">Delete {deleteTarget.name}?</h2>
+            <p>Their link will stop opening a calendar. This cannot be undone.</p>
+            {deleteError ? <p className="form-error">{deleteError}</p> : null}
+            <div className="modal-actions">
+              <button type="button" onClick={() => setDeleteTarget(null)}>
+                Keep
+              </button>
+              <button type="button" className="btn-danger" onClick={() => void confirmDelete()}>
+                Delete calendar
+              </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

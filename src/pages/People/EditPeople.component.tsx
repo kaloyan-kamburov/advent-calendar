@@ -1,119 +1,70 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC, FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { get } from "firebase/database";
 import { database, ref, update } from "../../config";
-import { /*getDatabase,*/ onValue } from "firebase/database";
-interface Props {
+import { personPayload, readPerson, type DayEntry, type Person } from "../../calendarData";
+import PersonForm from "./PersonForm";
+
+type Props = {
   id: string;
   closeFn: () => void;
-}
-
-const slugify = (text: string) => {
-  return text.toString().toLowerCase().replace(/\s+/g, "-"); // Replace spaces with -
 };
-const CalendarEdit: FC<Props> = ({ id, closeFn }) => {
-  const [formValues, setFormValues] = useState<any>({});
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      // Reference to the "people" node in Realtime Database
-      const peopleRef = ref(database, `people/${id}`);
 
-      const payload: {
-        [key: string]: string;
-      } = {
-        name: formValues.name,
-        slug: slugify(formValues.name),
-      };
-      [...Array.from(Array(25).keys())].slice(1).forEach((el) => {
-        payload[el] = formValues[el];
-      });
-
-      // Add a new entry to "people"
-      await update(peopleRef, payload);
-
-      closeFn();
-      // setName(""); // Clear the input field after submission
-    } catch (error) {
-      console.error("Error adding person: ", error);
-      alert("Failed to add person.");
-    }
-  };
-
-  const checkValidForm = () => {
-    if (!formValues.name) {
-      return false;
-    }
-    return true;
-  };
+const CalendarEdit = ({ id, closeFn }: Props) => {
+  const [person, setPerson] = useState<Person | null>(null);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
-    // Reference to the specific collection in the database
-    const collectionRef = ref(database, `people/${id}`);
-
-    // Function to fetch data from the database
-    const fetchData = () => {
-      // Listen for changes in the collection
-      onValue(collectionRef, (snapshot) => {
-        const dataItem = snapshot.val();
-        // Check if dataItem exists
-        if (dataItem) {
-          // Convert the object values into an array
-          setFormValues(dataItem);
-        }
-      });
+    let active = true;
+    void get(ref(database, `people/${id}`)).then((snapshot) => {
+      if (!active) return;
+      const next = readPerson(id, snapshot.val());
+      if (!next) setMissing(true);
+      else setPerson(next);
+    });
+    return () => {
+      active = false;
     };
+  }, [id]);
 
-    // Fetch data when the component mounts
-    fetchData();
-  }, []);
-  return (
-    <div className="p-15 w-100">
-      <h1>Edit Person</h1>
-      <form onSubmit={onSubmit}>
-        <div className="input-wrapper">
-          <label htmlFor="name">name</label>
-          <input
-            type="text"
-            name="name"
-            id="title"
-            value={formValues.name}
-            onChange={(e) => {
-              setFormValues({
-                ...formValues,
-                name: e.target.value,
-              });
-            }}
-          />
-        </div>
-        {[...Array.from(Array(25).keys())].slice(1).map((el) => (
-          <div className="input-wrapper" key={el}>
-            <label htmlFor={`${el}`}>{el}</label>
-            <textarea
-              name={`${el}`}
-              id={`${el}`}
-              rows={3}
-              value={formValues[el]?.text}
-              onChange={(e) => {
-                setFormValues({
-                  ...formValues,
-                  [e.target.name]: {
-                    ...formValues[e.target.name],
-                    text: e.target.value,
-                  },
-                });
-              }}
-            />
+  const onSubmit = async (name: string, days: DayEntry[]) => {
+    await update(ref(database, `people/${id}`), personPayload(name, days));
+    closeFn();
+  };
+
+  if (missing) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-wrap">
+          <div className="empty-state">
+            <h2>Calendar not found</h2>
+            <p className="muted">It may have been deleted.</p>
+            <button type="button" className="btn-primary" onClick={closeFn}>
+              Back to calendars
+            </button>
           </div>
-        ))}
-        <button type="submit" disabled={!checkValidForm()}>
-          Submit
-        </button>
-        <button type="button" onClick={closeFn}>
-          Cancel
-        </button>
-      </form>
-    </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!person) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-loading">Loading calendar…</div>
+      </div>
+    );
+  }
+
+  return (
+    <PersonForm
+      heading={`Edit ${person.name}`}
+      initialName={person.name}
+      initialDays={person.days}
+      originalSlug={person.slug}
+      submitLabel="Save changes"
+      onSubmit={onSubmit}
+      onCancel={closeFn}
+    />
   );
 };
 

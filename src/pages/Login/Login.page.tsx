@@ -1,55 +1,78 @@
 import { FormEvent, useState } from "react";
-import { useAuth } from "../../AuthContext";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../../AuthContext";
+
+function loginErrorMessage(error: unknown): string {
+  const code =
+    typeof error === "object" && error && "code" in error ? String((error as { code: unknown }).code) : "";
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+    return "That email or password is incorrect.";
+  }
+  if (code === "auth/too-many-requests") return "Too many attempts. Wait a moment and try again.";
+  if (code === "auth/invalid-email") return "Enter a valid email address.";
+  return "Could not sign in. Try again.";
+}
 
 const Login = () => {
   const { login, user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setSubmitting(true);
     try {
-      // Call Firebase's signInWithEmailAndPassword function
-      const userCredential = await login(email, password);
-      console.log("User signed in:", userCredential.user);
-    } catch (error) {
-      alert(error);
-      console.error("Error signing in with email and password:", error);
+      await login(email, password);
+    } catch (loginError) {
+      setError(loginErrorMessage(loginError));
+      setSubmitting(false);
     }
   };
 
-  if (loading) return null; // or a loading spinner if you prefer
+  if (loading) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-loading">Loading…</div>
+      </div>
+    );
+  }
 
-  return user ? (
-    <Navigate to={"/people"} />
-  ) : (
-    <div className="login-wrapper">
-      <h1>Login</h1>
-      <form onSubmit={handleLogin}>
-        <div className="input-wrapper">
-          <label>Email:</label>
+  if (user) return <Navigate to="/people" />;
+
+  return (
+    <div className="admin-shell gate">
+      <form className="gate-card" onSubmit={handleLogin}>
+        <p className="eyebrow">Advent Calendar</p>
+        <h1>Sign in</h1>
+        <p className="gate-copy muted">Write and share each person’s calendar.</p>
+        <label className="field" htmlFor="email">
+          Email
           <input
+            id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
             required
-            placeholder="email"
           />
-        </div>
-        <div className="input-wrapper">
-          <label>Password:</label>
+        </label>
+        <label className="field" htmlFor="password">
+          Password
           <input
+            id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
             required
-            placeholder="password"
           />
-        </div>
-        {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
-        <button className="submit" type="submit">
-          Sign In
+        </label>
+        {error ? <p className="form-error">{error}</p> : null}
+        <button className="btn-primary" type="submit" disabled={submitting}>
+          {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </div>

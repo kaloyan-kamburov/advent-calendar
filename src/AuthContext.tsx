@@ -13,8 +13,8 @@ export const AuthProvider: FC<any> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // New loading state
 
-  const login = (user: string = "", email: string = "") =>
-    signInWithEmailAndPassword(auth, user, email).catch((error) => alert(error.message));
+  const login = (email: string, password: string) =>
+    signInWithEmailAndPassword(auth, email, password);
 
   const logout = () => auth.signOut();
 

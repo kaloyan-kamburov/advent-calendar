@@ -16,11 +16,13 @@
     "react-awesome-reveal": "^4.2.14",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
-    "react-snowfall": "^2.1.1"
+    "react-snowfall": "^2.1.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/react": "^18.3.12",
+    "@types/three": "^0.186.0",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "eslint": "^9.13.0",

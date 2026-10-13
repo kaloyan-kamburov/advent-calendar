@@ -7,7 +7,13 @@ const PrivateRoute: FC<any> = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return null; // or a loading spinner if you prefer
+  if (loading) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-loading">Loading…</div>
+      </div>
+    );
+  }
 
   return user ? children : <Navigate to="/login" state={{ from: location }} />;
 };
